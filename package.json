@@ -26,7 +26,7 @@
     "tc": "tsc --noEmit",
     "test": "jest",
     "testw": "jest --watch",
-    "build": "rm -rf lib && tsc"
+    "build": "rm -rf lib && tsc -p tsconfig.build.json"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

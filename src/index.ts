@@ -29,23 +29,23 @@ export class Yesttp {
     this.responseSuccessInterceptor = responseSuccessInterceptor;
   }
 
-  public get<T = any>(url: string, options = {} as Yesttp.GetOptions): Promise<Yesttp.Response<T>> {
+  public get<T = any>(url: string, options: Yesttp.GetOptions = {}): Promise<Yesttp.Response<T>> {
     return this.makeRequest({ ...options, url, method: "GET" });
   }
 
-  public post<T = any>(url: string, options = {} as Yesttp.RequestOptions): Promise<Yesttp.Response<T>> {
+  public post<T = any>(url: string, options: Yesttp.RequestOptions = {}): Promise<Yesttp.Response<T>> {
     return this.makeRequest({ ...options, url, method: "POST" });
   }
 
-  public put<T = any>(url: string, options = {} as Yesttp.RequestOptions): Promise<Yesttp.Response<T>> {
+  public put<T = any>(url: string, options: Yesttp.RequestOptions = {}): Promise<Yesttp.Response<T>> {
     return this.makeRequest({ ...options, url, method: "PUT" });
   }
 
-  public patch<T = any>(url: string, options = {} as Yesttp.RequestOptions): Promise<Yesttp.Response<T>> {
+  public patch<T = any>(url: string, options: Yesttp.RequestOptions = {}): Promise<Yesttp.Response<T>> {
     return this.makeRequest({ ...options, url, method: "PATCH" });
   }
 
-  public delete<T = any>(url: string, options = {} as Yesttp.RequestOptions): Promise<Yesttp.Response<T>> {
+  public delete<T = any>(url: string, options: Yesttp.RequestOptions = {}): Promise<Yesttp.Response<T>> {
     return this.makeRequest({ ...options, url, method: "DELETE" });
   }
 

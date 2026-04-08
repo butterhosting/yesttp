@@ -9,7 +9,7 @@ By default, it uses JSON serialization and deserialization for both request and 
 ```
 npm install yesttp
 
-yarn add yesttp
+bun add yesttp
 ```
 
 ## Quick Example
