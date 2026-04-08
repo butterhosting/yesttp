@@ -13,15 +13,15 @@
     "lightweight",
     "axios-alternative"
   ],
-  "author": "Jessy <github@jessym.com>",
+  "author": "Jessy <contact@butterhost.ing>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jessym/yesttp.git"
+    "url": "git+https://github.com/butterhosting/yesttp.git"
   },
   "bugs": {
-    "url": "https://github.com/jessym/yesttp/issues"
+    "url": "https://github.com/butterhosting/yesttp/issues"
   },
-  "homepage": "https://github.com/jessym/yesttp#readme",
+  "homepage": "https://github.com/butterhosting/yesttp#readme",
   "scripts": {
     "tc": "tsc --noEmit",
     "test": "jest",
