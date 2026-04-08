@@ -29,27 +29,42 @@ export class Yesttp {
     this.responseSuccessInterceptor = responseSuccessInterceptor;
   }
 
-  public get<T = any>(url: string, options: Yesttp.GetOptions = {}): Promise<Yesttp.Response<T>> {
+  public get(url: string, options: Yesttp.GetOptions & { responseType: "blob" }): Promise<Yesttp.BlobResponse>;
+  public get(url: string, options: Yesttp.GetOptions & { responseType: "text" }): Promise<Yesttp.TextResponse>;
+  public get<T = any>(url: string, options?: Yesttp.GetOptions): Promise<Yesttp.JsonResponse<T>>;
+  public get(url: string, options: Yesttp.GetOptions = {}): Promise<any> {
     return this.makeRequest({ ...options, url, method: "GET" });
   }
 
-  public post<T = any>(url: string, options: Yesttp.RequestOptions = {}): Promise<Yesttp.Response<T>> {
+  public post(url: string, options: Yesttp.RequestOptions & { responseType: "blob" }): Promise<Yesttp.BlobResponse>;
+  public post(url: string, options: Yesttp.RequestOptions & { responseType: "text" }): Promise<Yesttp.TextResponse>;
+  public post<T = any>(url: string, options?: Yesttp.RequestOptions): Promise<Yesttp.JsonResponse<T>>;
+  public post(url: string, options: Yesttp.RequestOptions = {}): Promise<any> {
     return this.makeRequest({ ...options, url, method: "POST" });
   }
 
-  public put<T = any>(url: string, options: Yesttp.RequestOptions = {}): Promise<Yesttp.Response<T>> {
+  public put(url: string, options: Yesttp.RequestOptions & { responseType: "blob" }): Promise<Yesttp.BlobResponse>;
+  public put(url: string, options: Yesttp.RequestOptions & { responseType: "text" }): Promise<Yesttp.TextResponse>;
+  public put<T = any>(url: string, options?: Yesttp.RequestOptions): Promise<Yesttp.JsonResponse<T>>;
+  public put(url: string, options: Yesttp.RequestOptions = {}): Promise<any> {
     return this.makeRequest({ ...options, url, method: "PUT" });
   }
 
-  public patch<T = any>(url: string, options: Yesttp.RequestOptions = {}): Promise<Yesttp.Response<T>> {
+  public patch(url: string, options: Yesttp.RequestOptions & { responseType: "blob" }): Promise<Yesttp.BlobResponse>;
+  public patch(url: string, options: Yesttp.RequestOptions & { responseType: "text" }): Promise<Yesttp.TextResponse>;
+  public patch<T = any>(url: string, options?: Yesttp.RequestOptions): Promise<Yesttp.JsonResponse<T>>;
+  public patch(url: string, options: Yesttp.RequestOptions = {}): Promise<any> {
     return this.makeRequest({ ...options, url, method: "PATCH" });
   }
 
-  public delete<T = any>(url: string, options: Yesttp.RequestOptions = {}): Promise<Yesttp.Response<T>> {
+  public delete(url: string, options: Yesttp.RequestOptions & { responseType: "blob" }): Promise<Yesttp.BlobResponse>;
+  public delete(url: string, options: Yesttp.RequestOptions & { responseType: "text" }): Promise<Yesttp.TextResponse>;
+  public delete<T = any>(url: string, options?: Yesttp.RequestOptions): Promise<Yesttp.JsonResponse<T>>;
+  public delete(url: string, options: Yesttp.RequestOptions = {}): Promise<any> {
     return this.makeRequest({ ...options, url, method: "DELETE" });
   }
 
-  private async makeRequest<T>(requestOptions: Yesttp.RequestSummary): Promise<Yesttp.Response<T>> {
+  private async makeRequest(requestOptions: Yesttp.RequestSummary): Promise<any> {
     if (!this.fetchInstance) {
       throw new Error("[Yesttp] Could not find fetch function on `global` or `window`, please make it available there");
     }
@@ -72,42 +87,43 @@ export class Yesttp {
         credentials: options.credentials,
       });
     } catch (e) {
-      return this.responseErrorInterceptor(options, { status: 0, body: undefined, bodyRaw: undefined, headers: {} }, e);
+      return this.responseErrorInterceptor(options, { status: 0, headers: {} }, e);
     }
     return this.handleResponse(options, response);
   }
 
-  private async handleResponse<T>(request: Yesttp.RequestSummary, fetchResponse: Response): Promise<Yesttp.Response<T>> {
-    let text: string | undefined;
-    let json: T | undefined;
-    let invalidJsonResponse = false;
-    try {
-      text = await fetchResponse.text();
-      if (typeof text !== "undefined") {
-        json = JSON.parse(text);
-      }
-    } catch (ignored) {
-      invalidJsonResponse = true;
-    }
-    const response: Yesttp.Response<T> = {
-      headers: this.parseFetchHeaders(fetchResponse.headers || new Headers()),
-      status: fetchResponse?.status,
-      bodyRaw: text as string,
-      get body(): T {
-        if (invalidJsonResponse) {
-          console.warn("[Yesttp] You're trying to access the response body as JSON, but it could not be parsed as such");
+  private async handleResponse(request: Yesttp.RequestSummary, fetchResponse: Response): Promise<any> {
+    const status = fetchResponse.status;
+    const headers = this.parseFetchHeaders(fetchResponse.headers || new Headers());
+    const success = status >= 200 && status < 400;
+    const interceptorFn = success ? this.responseSuccessInterceptor.bind(this) : this.responseErrorInterceptor.bind(this);
+    const targetResponseType: Yesttp.ResponseType = success ? (request.responseType ?? "json") : (request.responseErrorType ?? "json");
+    switch (targetResponseType) {
+      case "json": {
+        let json: any;
+        let invalidJson = false;
+        try {
+          json = await fetchResponse.json();
+        } catch {
+          invalidJson = true;
         }
-        return json as T;
-      },
-    };
-
-    // Success
-    if (response.status >= 200 && response.status < 400) {
-      return this.responseSuccessInterceptor(request, response);
+        const response: Yesttp.JsonResponse<any> = {
+          headers,
+          status,
+          get json() {
+            if (invalidJson) {
+              console.warn("[Yesttp] You're trying to access the response body as JSON, but it could not be parsed as such");
+            }
+            return json;
+          },
+        };
+        return interceptorFn(request, response);
+      }
+      case "text":
+        return interceptorFn(request, { headers, status, text: await fetchResponse.text() } satisfies Yesttp.TextResponse);
+      case "blob":
+        return interceptorFn(request, { headers, status, blob: await fetchResponse.blob() } satisfies Yesttp.BlobResponse);
     }
-
-    // Error
-    return this.responseErrorInterceptor(request, response);
   }
 
   private constructCompleteUrl({ url, searchParams }: Yesttp.RequestSummary): string {
@@ -160,7 +176,7 @@ export namespace Yesttp {
   export type RequestInterceptor = (request: RequestSummary) => Promise<RequestSummary>;
   export const defaultRequestInterceptor: RequestInterceptor = (request) => Promise.resolve(request);
 
-  export type ResponseErrorInterceptor = (request: RequestSummary, response: ResponseWithOptionalBody, cause?: any) => Promise<any>;
+  export type ResponseErrorInterceptor = (request: RequestSummary, response: AnyResponse, cause?: any) => Promise<any>;
   export const defaultResponseErrorInterceptor: ResponseErrorInterceptor = (request, response, cause) => {
     const error: Yesttp.ResponseError = { request, response };
     const errorArgs = ["[Yesttp] An HTTP error occurred", error];
@@ -169,8 +185,8 @@ export namespace Yesttp {
     throw error;
   };
 
-  export type ResponseSuccessInterceptor = (request: RequestSummary, response: ResponseWithOptionalBody) => Promise<any>;
-  export const defaultResponseSuccessInterceptor: Yesttp.ResponseErrorInterceptor = (request, response) => Promise.resolve(response);
+  export type ResponseSuccessInterceptor = (request: RequestSummary, response: AnyResponse) => Promise<any>;
+  export const defaultResponseSuccessInterceptor: Yesttp.ResponseSuccessInterceptor = (request, response) => Promise.resolve(response);
 
   export type ConstructorArgs = {
     baseUrl?: string;
@@ -180,7 +196,11 @@ export namespace Yesttp {
     responseSuccessInterceptor?: ResponseSuccessInterceptor;
   };
 
+  export type ResponseType = "json" | "text" | "blob";
+
   export type GetOptions = {
+    responseType?: ResponseType;
+    responseErrorType?: ResponseType;
     searchParams?: Record<string, any>;
     headers?: Record<string, string | undefined>;
     credentials?: RequestCredentials;
@@ -196,21 +216,26 @@ export namespace Yesttp {
     method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   };
 
-  export type Response<T> = {
+  type CommonResponse = {
     status: number;
     headers: Record<string, string>;
-    body: T;
-    bodyRaw: string;
+  };
+
+  export type AnyResponse = CommonResponse &
+    Partial<Pick<JsonResponse<any>, "json"> & Pick<TextResponse, "text"> & Pick<BlobResponse, "blob">>;
+
+  export type JsonResponse<T> = CommonResponse & {
+    json: T;
+  };
+  export type TextResponse = CommonResponse & {
+    text: string;
+  };
+  export type BlobResponse = CommonResponse & {
+    blob: Blob;
   };
 
   export type ResponseError = {
     request: RequestSummary;
-    response: ResponseWithOptionalBody;
-  };
-
-  type ResponseWithOptionalBody = AllowUndefined<Response<any>, "body" | "bodyRaw">;
-
-  type AllowUndefined<T, K extends keyof T> = Omit<T, K> & {
-    [P in K]: T[K] | undefined;
+    response: AnyResponse;
   };
 }

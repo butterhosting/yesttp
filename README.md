@@ -17,15 +17,14 @@ bun add yesttp
 ```ts
 import { Yesttp } from 'yesttp';
 
-const response = await new Yesttp().post('https://api.backend.com/users', {
+const response = await new Yesttp().post<{ id: string }>('https://api.backend.com/users', {
   body: {
     name: 'Bob',
     age: 42,
   },
 });
 
-// Assuming the backend JSON response contains an `id` field
-const userId = response.body.id;
+const userId = response.json.id;
 ```
 
 ## Creating an instance
@@ -47,7 +46,7 @@ const yesttp = new Yesttp({
 });
 ```
 
-## Instance Request API
+## Request Options
 
 ```ts
 yesttp.get('/users');
@@ -60,32 +59,54 @@ yesttp.post('/users', {
 Here's an overview of the available request options:
 
 ```ts
-export type GetOptions = {
-  searchParams?: Record<string, string | undefined>;
+// GET
+type GetOptions = {
+  responseType?: 'json' | 'text' | 'blob';
+  responseErrorType?: 'json' | 'text' | 'blob';
+  searchParams?: Record<string, any>;
   headers?: Record<string, string | undefined>;
+  credentials?: "include" | "omit" | "same-origin";
 };
 
-export type RequestOptions = {
-  searchParams?: Record<string, string | undefined>;
-  headers?: Record<string, string | undefined>;
+// POST, PUT, PATCH, DELETE
+export type RequestOptions = GetOptions & {
   body?: any;
   bodyRaw?: any;
 };
 ```
 
-## Instance Response API
+## Response Types
+
+The response shape depends on the `responseType` option. The default is `json`.
+
+### JSON (default)
 
 ```ts
 const response = await yesttp.get<User>('/users/123');
+
+response.json; // User
+response.status; // number
+response.headers; // Record<string, string>
 ```
 
-Here, the response is an object with the following properties:
+### Text
 
 ```ts
-type Response<T> = {
-  status: number;
-  headers: Record<string, string>;
-  body: T;
-  bodyRaw: string;
-};
+const response = await yesttp.get('/page', { responseType: 'text' });
+
+response.text; // string
+response.status; // number
+response.headers; // Record<string, string>
 ```
+
+### Blob
+
+```ts
+const response = await yesttp.get('/file', { responseType: 'blob' });
+
+response.blob; // Blob
+response.status; // number
+response.headers; // Record<string, string>
+```
+
+TypeScript automatically infers the correct response type based on the `responseType` option.
