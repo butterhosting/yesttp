@@ -9,7 +9,7 @@ on:
       - main
 
 permissions:
-  id-tokens: write
+  id-token: write
   contents: read
 
 env:
