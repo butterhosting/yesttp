@@ -1,8 +1,7 @@
 export class Yesttp {
-
   private static get globalWindowFetch(): typeof fetch | undefined {
-    if (typeof window !== 'undefined' && window.fetch) return window.fetch.bind(window);
-    if (typeof global !== 'undefined' && global.fetch) return global.fetch.bind(global);
+    if (typeof window !== "undefined" && window.fetch) return window.fetch.bind(window);
+    if (typeof global !== "undefined" && global.fetch) return global.fetch.bind(global);
     return undefined;
   }
 
@@ -13,13 +12,15 @@ export class Yesttp {
   private readonly responseErrorInterceptor: Yesttp.ResponseErrorInterceptor;
   private readonly responseSuccessInterceptor: Yesttp.ResponseSuccessInterceptor;
 
-  public constructor({
-    baseUrl = undefined,
-    credentials = undefined,
-    requestInterceptor = Yesttp.defaultRequestInterceptor,
-    responseErrorIntercepter = Yesttp.defaultResponseErrorInterceptor,
-    responseSuccessInterceptor = Yesttp.defaultResponseSuccessInterceptor,
-  } = {} as Yesttp.ConstructorArgs) {
+  public constructor(
+    {
+      baseUrl = undefined,
+      credentials = undefined,
+      requestInterceptor = Yesttp.defaultRequestInterceptor,
+      responseErrorIntercepter = Yesttp.defaultResponseErrorInterceptor,
+      responseSuccessInterceptor = Yesttp.defaultResponseSuccessInterceptor,
+    } = {} as Yesttp.ConstructorArgs,
+  ) {
     this.baseUrl = baseUrl;
     this.credentials = credentials;
     this.fetchInstance = Yesttp.globalWindowFetch;
@@ -29,28 +30,28 @@ export class Yesttp {
   }
 
   public get<T = any>(url: string, options = {} as Yesttp.GetOptions): Promise<Yesttp.Response<T>> {
-    return this.makeRequest({ ...options, url, method: 'GET' });
+    return this.makeRequest({ ...options, url, method: "GET" });
   }
 
   public post<T = any>(url: string, options = {} as Yesttp.RequestOptions): Promise<Yesttp.Response<T>> {
-    return this.makeRequest({ ...options, url, method: 'POST' });
+    return this.makeRequest({ ...options, url, method: "POST" });
   }
 
   public put<T = any>(url: string, options = {} as Yesttp.RequestOptions): Promise<Yesttp.Response<T>> {
-    return this.makeRequest({ ...options, url, method: 'PUT' });
+    return this.makeRequest({ ...options, url, method: "PUT" });
   }
 
   public patch<T = any>(url: string, options = {} as Yesttp.RequestOptions): Promise<Yesttp.Response<T>> {
-    return this.makeRequest({ ...options, url, method: 'PATCH' });
+    return this.makeRequest({ ...options, url, method: "PATCH" });
   }
 
   public delete<T = any>(url: string, options = {} as Yesttp.RequestOptions): Promise<Yesttp.Response<T>> {
-    return this.makeRequest({ ...options, url, method: 'DELETE' });
+    return this.makeRequest({ ...options, url, method: "DELETE" });
   }
 
   private async makeRequest<T>(requestOptions: Yesttp.RequestSummary): Promise<Yesttp.Response<T>> {
     if (!this.fetchInstance) {
-      throw new Error('[Yesttp] Could not find fetch function on `global` or `window`, please make it available there');
+      throw new Error("[Yesttp] Could not find fetch function on `global` or `window`, please make it available there");
     }
     const options = await this.requestInterceptor({
       ...requestOptions,
@@ -58,7 +59,7 @@ export class Yesttp {
       credentials: requestOptions.credentials || this.credentials,
       headers: this.removeUndefinedMappings({
         ...requestOptions.headers,
-        'Content-Type': requestOptions.headers?.['Content-Type'] || (requestOptions.body ? 'application/json' : undefined),
+        "Content-Type": requestOptions.headers?.["Content-Type"] || (requestOptions.body ? "application/json" : undefined),
       }),
     });
 
@@ -82,7 +83,7 @@ export class Yesttp {
     let invalidJsonResponse = false;
     try {
       text = await fetchResponse.text();
-      if (typeof text !== 'undefined') {
+      if (typeof text !== "undefined") {
         json = JSON.parse(text);
       }
     } catch (ignored) {
@@ -94,10 +95,10 @@ export class Yesttp {
       bodyRaw: text as string,
       get body(): T {
         if (invalidJsonResponse) {
-          console.warn('[Yesttp] You\'re trying to access the response body as JSON, but it could not be parsed as such');
+          console.warn("[Yesttp] You're trying to access the response body as JSON, but it could not be parsed as such");
         }
         return json as T;
-      }
+      },
     };
 
     // Success
@@ -110,24 +111,25 @@ export class Yesttp {
   }
 
   private constructCompleteUrl({ url, searchParams }: Yesttp.RequestSummary): string {
-    let completeUrl = '';
+    let completeUrl = "";
     if (url.match(/^https?:\/\//)) {
       completeUrl += url;
     } else {
-      const baseUrl = this.baseUrl || '';
-      const insertSlash = !baseUrl.endsWith('/') && !url.startsWith('/');
-      const removeSlash = baseUrl.endsWith('/') && url.startsWith('/');
+      const baseUrl = this.baseUrl || "";
+      const insertSlash = !baseUrl.endsWith("/") && !url.startsWith("/");
+      const removeSlash = baseUrl.endsWith("/") && url.startsWith("/");
       if (removeSlash) {
         completeUrl = `${baseUrl.slice(0, -1)}${url}`;
       } else {
-        completeUrl += `${baseUrl}${insertSlash ? '/' : ''}${url}`;
+        completeUrl += `${baseUrl}${insertSlash ? "/" : ""}${url}`;
       }
     }
-    const searchParamsStrippedOfUndefined = { ...searchParams } as Record<string, string>;
+    const searchParamsStrippedOfUndefined = { ...searchParams } as Record<string, any>;
     Object.entries(searchParamsStrippedOfUndefined).forEach(([key, value]) => {
-      if (typeof value === 'undefined') {
+      if (typeof value === "undefined") {
         delete searchParamsStrippedOfUndefined[key];
       }
+      searchParamsStrippedOfUndefined[key] = String(value);
     });
     const params = new URLSearchParams(searchParamsStrippedOfUndefined).toString();
     if (params) {
@@ -137,33 +139,31 @@ export class Yesttp {
   }
 
   private removeUndefinedMappings(obj: Record<string, string | undefined>): Record<string, string> {
-    const result: Record<string, string> = {}
+    const result: Record<string, string> = {};
     for (const key in obj) {
       const value = obj[key];
       if (value !== undefined && value !== null) {
         result[key] = value;
       }
     }
-    return result
+    return result;
   }
 
   private parseFetchHeaders(fetchHeaders: Headers): Record<string, string> {
     const result: Record<string, string> = {};
-    fetchHeaders.forEach((value, key) => result[key] = value);
+    fetchHeaders.forEach((value, key) => (result[key] = value));
     return result;
   }
-
 }
 
 export namespace Yesttp {
-
   export type RequestInterceptor = (request: RequestSummary) => Promise<RequestSummary>;
   export const defaultRequestInterceptor: RequestInterceptor = (request) => Promise.resolve(request);
 
   export type ResponseErrorInterceptor = (request: RequestSummary, response: ResponseWithOptionalBody, cause?: any) => Promise<any>;
   export const defaultResponseErrorInterceptor: ResponseErrorInterceptor = (request, response, cause) => {
     const error: Yesttp.ResponseError = { request, response };
-    const errorArgs = ['[Yesttp] An HTTP error occurred', error];
+    const errorArgs = ["[Yesttp] An HTTP error occurred", error];
     if (cause) errorArgs.push(cause);
     console.error(...errorArgs);
     throw error;
@@ -181,7 +181,7 @@ export namespace Yesttp {
   };
 
   export type GetOptions = {
-    searchParams?: Record<string, string | undefined>;
+    searchParams?: Record<string, any>;
     headers?: Record<string, string | undefined>;
     credentials?: RequestCredentials;
   };
@@ -193,7 +193,7 @@ export namespace Yesttp {
 
   export type RequestSummary = RequestOptions & {
     url: string;
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   };
 
   export type Response<T> = {
@@ -208,10 +208,9 @@ export namespace Yesttp {
     response: ResponseWithOptionalBody;
   };
 
-  type ResponseWithOptionalBody = AllowUndefined<Response<any>, 'body' | 'bodyRaw'>;
+  type ResponseWithOptionalBody = AllowUndefined<Response<any>, "body" | "bodyRaw">;
 
   type AllowUndefined<T, K extends keyof T> = Omit<T, K> & {
     [P in K]: T[K] | undefined;
   };
-
 }

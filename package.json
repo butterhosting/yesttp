@@ -23,16 +23,17 @@
   },
   "homepage": "https://github.com/jessym/yesttp#readme",
   "scripts": {
+    "tc": "tsc --noEmit",
     "test": "jest",
     "testw": "jest --watch",
     "build": "rm -rf lib && tsc"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/node": "^22.10.2",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "ts-jest": "^29.2.5",
-    "typescript": "^5.7.2"
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.0",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
+    "ts-jest": "^29.4.9",
+    "typescript": "^6.0.2"
   }
 }
