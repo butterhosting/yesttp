@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-tokens: write
+  contents: read
+
 env:
   NODE_MAJOR_VERSION: "24"
 
@@ -47,5 +51,4 @@ jobs:
       - name: "Deployment :: Publish to NPM"
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          npm config set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
           npm publish --access public
