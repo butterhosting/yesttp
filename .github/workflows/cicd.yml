@@ -40,7 +40,7 @@ jobs:
         run: npm run build
 
       - name: "Application :: Tests"
-        run: npm run test
+        run: npm test
 
       - name: "Release :: Set Version"
         if: startsWith(github.ref, 'refs/tags/')

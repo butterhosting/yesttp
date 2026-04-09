@@ -1,4 +1,5 @@
 import { Yesttp } from "./index";
+import { Temporal } from "@js-temporal/polyfill";
 
 describe(Yesttp, () => {
   type MockedFetchResonse<T = any> = {
@@ -160,6 +161,20 @@ describe(Yesttp, () => {
 
       // Then
       expect(window.fetch).toHaveBeenCalledWith("/users?abc=123", expect.anything());
+    });
+
+    it("should work with different types of search parameters", async () => {
+      // When
+      await new Yesttp().get("/users", {
+        searchParams: {
+          color: "red",
+          from: Temporal.Instant.from("2026-04-09T08:04:13.208853186Z"),
+          to: undefined,
+        },
+      });
+
+      // Then
+      expect(window.fetch).toHaveBeenCalledWith("/users?color=red&from=2026-04-09T08%3A04%3A13.208853186Z", expect.anything());
     });
   });
 

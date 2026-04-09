@@ -127,6 +127,7 @@ export class Yesttp {
   }
 
   private constructCompleteUrl({ url, searchParams }: Yesttp.RequestSummary): string {
+    // url
     let completeUrl = "";
     if (url.match(/^https?:\/\//)) {
       completeUrl += url;
@@ -140,14 +141,14 @@ export class Yesttp {
         completeUrl += `${baseUrl}${insertSlash ? "/" : ""}${url}`;
       }
     }
-    const searchParamsStrippedOfUndefined = { ...searchParams } as Record<string, any>;
-    Object.entries(searchParamsStrippedOfUndefined).forEach(([key, value]) => {
-      if (typeof value === "undefined") {
-        delete searchParamsStrippedOfUndefined[key];
+    // search params
+    const definedSearchParams = {} as Record<string, string>;
+    Object.entries({ ...searchParams }).forEach(([key, value]) => {
+      if (typeof value !== "undefined") {
+        definedSearchParams[key] = String(value);
       }
-      searchParamsStrippedOfUndefined[key] = String(value);
     });
-    const params = new URLSearchParams(searchParamsStrippedOfUndefined).toString();
+    const params = new URLSearchParams(definedSearchParams).toString();
     if (params) {
       completeUrl += `?${params}`;
     }
