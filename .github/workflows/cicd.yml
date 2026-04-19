@@ -17,7 +17,7 @@ env:
 
 jobs:
   main:
-    name: "CICD Pipeline"
+    name: "CI/CD Pipeline"
     runs-on: ubuntu-latest
 
     steps:
